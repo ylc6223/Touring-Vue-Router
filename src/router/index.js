@@ -52,7 +52,8 @@ const routes = [
       {
         path: 'edit',
         name: 'EventEdit',
-        component: EventEdit
+        component: EventEdit,
+        meta: { requireAuth: true }
       }
     ]
   },
@@ -89,8 +90,23 @@ const router = createRouter({
   history: createWebHistory(process.env.BASE_URL),
   routes
 })
-router.beforeEach(() => {
+/* eslint-disable */
+router.beforeEach((to,from) => {
   NProgress.start()
+  const notAuthorized = true
+  if (to.meta.requireAuth && notAuthorized) {
+    GStore.flashMessage = 'Sorry, you are not authorized to view this page'
+
+    setTimeout(() => {
+      GStore.flashMessage = ''
+    }, 3000)
+    console.log(from,'from')
+    if (from.href) { // <--- If this navigation came from a previous page.
+      return false
+    } else {  // <--- Must be navigating directly
+      return { path: '/' }  // <--- Push navigation to the root route.
+    }
+  }
 })
 
 router.afterEach(() => {
