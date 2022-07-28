@@ -26,7 +26,6 @@
 <script>
 import EventCard from '@/components/EventCard.vue'
 import EventService from '@/services/EventService.js'
-import NProgress from 'nprogress'
 
 export default {
   name: 'EventList',
@@ -41,9 +40,9 @@ export default {
     }
   },
   beforeRouteEnter(routeTo, routeFrom, next) {
-    NProgress.start()
     EventService.getEvents(2, parseInt(routeTo.query.page) || 1)
       .then(response => {
+        //传一个回调给next来访问组件实例,在导航被确认的时候执行回调，并且把组件实例作为回调方法的参数：
         next(comp => {
           comp.events = response.data
           comp.totalEvents = response.headers['x-total-count']
@@ -52,22 +51,17 @@ export default {
       .catch(() => {
         next({ name: 'NetworkError' })
       })
-      .finally(() => {
-        NProgress.done()
-      })
   },
   beforeRouteUpdate(routeTo) {
-    NProgress.start()
-    EventService.getEvents(2, parseInt(routeTo.query.page) || 1)
+    //beforeRouteUpdate返回一个值（或一个 Promise ），则可以省略 next
+    //这里添加return的原因是因为需要异步操作成功之后才结束进度条
+    return EventService.getEvents(2, parseInt(routeTo.query.page) || 1)
       .then(response => {
         this.events = response.data
         this.totalEvents = response.headers['x-total-count']
       })
       .catch(() => {
         return { name: 'NetworkError' }
-      })
-      .finally(() => {
-        NProgress.done()
       })
   },
   computed: {
